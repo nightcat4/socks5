@@ -8,7 +8,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-public class Client {
+public class SocksClient {
 
     public static void main(String[] args) {
 
@@ -23,7 +23,7 @@ public class Client {
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childHandler(new SocksClientInitializer());
-            bootstrap.bind(ConstantDef.CLIENT_LOCALPORT).sync().channel().closeFuture().sync();
+            bootstrap.bind(ConstantDef.CLIENT_PORT).sync().channel().closeFuture().sync();
         } catch (Exception e) {
             e.printStackTrace();
         }
