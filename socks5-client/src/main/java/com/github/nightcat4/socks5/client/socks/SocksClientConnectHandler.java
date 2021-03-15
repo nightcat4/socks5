@@ -1,27 +1,29 @@
 package com.github.nightcat4.socks5.client.socks;
 
+import com.github.nightcat4.socks5.common.ConstantDef;
 import com.github.nightcat4.socks5.common.util.DirectHandler;
 import com.github.nightcat4.socks5.common.util.RelayHandler;
 import com.github.nightcat4.socks5.common.util.SocksUtils;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandStatus;
-import io.netty.handler.codec.socksx.v5.Socks5Message;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
 
 @ChannelHandler.Sharable
-public class SocksClientConnectHandler extends SimpleChannelInboundHandler<Socks5Message> {
+public class SocksClientConnectHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     private final Bootstrap b = new Bootstrap();
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, final Socks5Message message) throws Exception {
-        final Socks5CommandRequest request = (Socks5CommandRequest) message;
+    public void channelRead0(final ChannelHandlerContext ctx, final ByteBuf message) throws Exception {
+
+
+        System.out.println("33333333333333333");
+
+
         Promise<Channel> promise = ctx.executor().newPromise();
         promise.addListener(
                 new FutureListener<Channel>() {
@@ -29,24 +31,12 @@ public class SocksClientConnectHandler extends SimpleChannelInboundHandler<Socks
                     public void operationComplete(final Future<Channel> future) throws Exception {
                         final Channel outboundChannel = future.getNow();
                         if (future.isSuccess()) {
-                            ChannelFuture responseFuture =
-                                    ctx.channel().writeAndFlush(new DefaultSocks5CommandResponse(
-                                            Socks5CommandStatus.SUCCESS,
-                                            request.dstAddrType(),
-                                            request.dstAddr(),
-                                            request.dstPort()));
-
-                            responseFuture.addListener(new ChannelFutureListener() {
-                                @Override
-                                public void operationComplete(ChannelFuture channelFuture) {
-                                    ctx.pipeline().remove(SocksClientConnectHandler.this);
-                                    outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                }
-                            });
+                            outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                            // 先add再remove，否则fire不能传递数据
+                            ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+                            ctx.pipeline().remove(SocksClientConnectHandler.this);
+                            ctx.fireChannelRead(message);
                         } else {
-                            ctx.channel().writeAndFlush(new DefaultSocks5CommandResponse(
-                                    Socks5CommandStatus.FAILURE, request.dstAddrType()));
                             SocksUtils.closeOnFlush(ctx.channel());
                         }
                     }
@@ -59,15 +49,13 @@ public class SocksClientConnectHandler extends SimpleChannelInboundHandler<Socks
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new DirectHandler(promise));
 
-        b.connect(request.dstAddr(), request.dstPort()).addListener(new ChannelFutureListener() {
+        b.connect(ConstantDef.SEVER_HOST, ConstantDef.SEVER_PORT).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
                     // Connection established use handler provided results
                 } else {
                     // Close the connection if the connection attempt has failed.
-                    ctx.channel().writeAndFlush(
-                            new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()));
                     SocksUtils.closeOnFlush(ctx.channel());
                 }
             }
