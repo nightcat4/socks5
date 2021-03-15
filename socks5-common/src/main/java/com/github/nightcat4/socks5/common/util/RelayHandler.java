@@ -10,22 +10,13 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel relayChannel;
 
-    private Object o = null;
-
     public RelayHandler(Channel relayChannel) {
         this.relayChannel = relayChannel;
-    }
-
-    public RelayHandler(Channel relayChannel, Object o) {
-        this.relayChannel = relayChannel;
-        this.o = o;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         ctx.writeAndFlush(Unpooled.EMPTY_BUFFER);
-        if (o != null)
-            relayChannel.writeAndFlush(o);
     }
 
     @Override
