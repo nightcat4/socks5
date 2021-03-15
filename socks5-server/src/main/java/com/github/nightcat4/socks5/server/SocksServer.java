@@ -20,7 +20,8 @@ public class SocksServer {
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new SocksServerInitializer());
-            b.bind(ConstantDef.SEVER_PORT).sync().channel().closeFuture().sync();
+            // 不写finally代码块则可以不用写future.channel().closeFuture().sync()
+            b.bind(ConstantDef.SEVER_PORT).sync();
         } catch (Exception e) {
             e.printStackTrace();
         }

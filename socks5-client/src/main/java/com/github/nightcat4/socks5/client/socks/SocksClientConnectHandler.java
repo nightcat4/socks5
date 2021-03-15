@@ -1,6 +1,6 @@
 package com.github.nightcat4.socks5.client.socks;
 
-import com.github.nightcat4.socks5.common.util.DirectClientHandler;
+import com.github.nightcat4.socks5.common.util.DirectHandler;
 import com.github.nightcat4.socks5.common.util.RelayHandler;
 import com.github.nightcat4.socks5.common.util.SocksUtils;
 import io.netty.bootstrap.Bootstrap;
@@ -57,7 +57,7 @@ public class SocksClientConnectHandler extends SimpleChannelInboundHandler<Socks
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .handler(new DirectClientHandler(promise));
+                .handler(new DirectHandler(promise));
 
         b.connect(request.dstAddr(), request.dstPort()).addListener(new ChannelFutureListener() {
             @Override

@@ -5,11 +5,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.concurrent.Promise;
 
-public final class DirectClientHandler extends ChannelInboundHandlerAdapter {
+public final class DirectHandler extends ChannelInboundHandlerAdapter {
 
     private final Promise<Channel> promise;
 
-    public DirectClientHandler(Promise<Channel> promise) {
+    public DirectHandler(Promise<Channel> promise) {
         this.promise = promise;
     }
 
