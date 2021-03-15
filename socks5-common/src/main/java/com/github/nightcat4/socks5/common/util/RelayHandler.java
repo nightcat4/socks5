@@ -4,6 +4,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
 import io.netty.util.ReferenceCountUtil;
 
 public final class RelayHandler extends ChannelInboundHandlerAdapter {
@@ -22,11 +23,12 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (relayChannel.isActive()) {
-
-            System.out.println(msg);
-
-
-            relayChannel.writeAndFlush(msg);
+            if (msg instanceof Socks5CommandRequest) {
+                Socks5CommandRequest request = (Socks5CommandRequest) msg;
+                relayChannel.writeAndFlush(SocksUtils.getConnectRequest(request));
+            } else {
+                relayChannel.writeAndFlush(msg);
+            }
         } else {
             ReferenceCountUtil.release(msg);
         }

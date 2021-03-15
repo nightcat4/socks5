@@ -6,10 +6,7 @@ import com.github.nightcat4.socks5.common.util.SocksUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandStatus;
-import io.netty.handler.codec.socksx.v5.Socks5Message;
+import io.netty.handler.codec.socksx.v5.*;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
@@ -18,6 +15,10 @@ import io.netty.util.concurrent.Promise;
 public final class SocksServerConnectHandler extends SimpleChannelInboundHandler<Socks5Message> {
 
     private final Bootstrap b = new Bootstrap();
+
+//    public void channelActive(ChannelHandlerContext ctx) {
+//        ctx.channel().writeAndFlush(SocksUtils.getConnectResponse());
+//    }
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final Socks5Message message) throws Exception {
@@ -29,21 +30,10 @@ public final class SocksServerConnectHandler extends SimpleChannelInboundHandler
                     public void operationComplete(final Future<Channel> future) throws Exception {
                         final Channel outboundChannel = future.getNow();
                         if (future.isSuccess()) {
-                            ChannelFuture responseFuture =
-                                    ctx.channel().writeAndFlush(new DefaultSocks5CommandResponse(
-                                            Socks5CommandStatus.SUCCESS,
-                                            request.dstAddrType(),
-                                            request.dstAddr(),
-                                            request.dstPort()));
-
-                            responseFuture.addListener(new ChannelFutureListener() {
-                                @Override
-                                public void operationComplete(ChannelFuture channelFuture) {
-                                    ctx.pipeline().remove(SocksServerConnectHandler.this);
-                                    outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                }
-                            });
+                            ctx.channel().writeAndFlush(SocksUtils.getConnectResponse(request));
+                            ctx.pipeline().remove(SocksServerConnectHandler.this);
+                            outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                            ctx.pipeline().addLast(new RelayHandler(outboundChannel));
                         } else {
                             ctx.channel().writeAndFlush(new DefaultSocks5CommandResponse(
                                     Socks5CommandStatus.FAILURE, request.dstAddrType()));

@@ -5,25 +5,20 @@ import com.github.nightcat4.socks5.common.util.DirectHandler;
 import com.github.nightcat4.socks5.common.util.RelayHandler;
 import com.github.nightcat4.socks5.common.util.SocksUtils;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
 
 @ChannelHandler.Sharable
-public class SocksClientConnectHandler extends SimpleChannelInboundHandler<ByteBuf> {
+public class SocksClientConnectHandler extends SimpleChannelInboundHandler<Socks5CommandRequest> {
 
     private final Bootstrap b = new Bootstrap();
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, final ByteBuf message) throws Exception {
-
-
-        System.out.println("33333333333333333");
-
-
+    public void channelRead0(final ChannelHandlerContext ctx, final Socks5CommandRequest message) throws Exception {
         Promise<Channel> promise = ctx.executor().newPromise();
         promise.addListener(
                 new FutureListener<Channel>() {
